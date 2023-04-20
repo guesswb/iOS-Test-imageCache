@@ -7,6 +7,8 @@
 
 import UIKit
 
+var cache: [Int: UIImage] = [:]
+
 class ImageCell: UICollectionViewCell {
     var image: UIImageView = UIImageView(image: UIImage(named: "placeholder"))
     var index: UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 20))
@@ -23,25 +25,43 @@ class ImageCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func fetchImage(_ url: URL) {
+    func fetchImage(_ index: Int, _ url: URL) {
         Task {
             let (data, _) = try await URLSession.shared.data(from: url)
-            image.image = UIImage(data: data)
+            let imageFromData = UIImage(data: data)
+            image.image = imageFromData
+//            cache[index] = imageFromData
         }
     }
 }
 
 class ViewController: UIViewController {
     
-    var data = 0
     var images: [URL] = []
-
+    var range: [Int] = [Int](0...200)
+    
+    enum Section {
+        case main
+    }
+    
+    var dataSource: UICollectionViewDiffableDataSource<Section, URL>!
+    
     var collectionView: UICollectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     
     override func viewDidLoad() {
         super.viewDidLoad()
         collectionView.delegate = self
-        collectionView.dataSource = self
+        dataSource = UICollectionViewDiffableDataSource<Section, URL>(collectionView: self.collectionView) { collectionView, indexPath, itemIdentifier -> UICollectionViewCell? in
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? ImageCell else { return ImageCell() }
+        
+            cell.backgroundColor = .brown
+            cell.index.text = String(indexPath.item)
+            cell.fetchImage(indexPath.row, itemIdentifier)
+//            cell.fetchImage(indexPath.row, self.images[indexPath.row])
+            
+            return cell
+        }
+        collectionView.dataSource = dataSource
         collectionView.backgroundColor = .blue
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: "cell")
         collectionView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
@@ -52,30 +72,28 @@ class ViewController: UIViewController {
     func loadImages() {
         var newURL: [URL] = [URL]()
         
-        for number in data..<(data+10) {
-            let urlString = "https://picsum.photos/id/\(number)/200/200"
+        for _ in 0..<20 {
+            let number = range.removeLast()
+            let urlString = "https://picsum.photos/id/\(number)/1000/1000"
             let url = URL(string: urlString)!
-            if !images.contains(url) {
-                newURL.append(url)
-            }
-        }
-        data += 10
-        images += newURL
-        var i = [IndexPath]()
-        for index in 0..<10 {
-            let indexPath = IndexPath(item: images.count - 10 + index, section: 0)
-            i.append(indexPath)
             
+            newURL.append(url)
         }
-        self.collectionView.performBatchUpdates({
-            collectionView.insertItems(at: i)
-        }, completion: nil)
+        
+        images += newURL
+        
+        var snapshot = NSDiffableDataSourceSnapshot<Section, URL>()
+        
+        snapshot.appendSections([.main])
+        snapshot.appendItems(images)
+        
+        self.dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
 
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if indexPath.item >= data - 1 {
+        if indexPath.item >= images.count - 1 {
             loadImages()
         }
     }
@@ -87,20 +105,3 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: width, height: width)
     }
 }
-
-extension ViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return images.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? ImageCell else { return ImageCell() }
-    
-        cell.backgroundColor = .brown
-        cell.index.text = String(indexPath.item)
-        cell.fetchImage(images[indexPath.row])
-        
-        return cell
-    }
-}
-
