@@ -30,7 +30,7 @@ class ImageCell: UICollectionViewCell {
             let (data, _) = try await URLSession.shared.data(from: url)
             let imageFromData = UIImage(data: data)
             image.image = imageFromData
-//            cache[index] = imageFromData
+            cache[index] = imageFromData
         }
     }
 }
@@ -38,7 +38,7 @@ class ImageCell: UICollectionViewCell {
 class ViewController: UIViewController {
     
     var images: [URL] = []
-    var range: [Int] = [Int](0...200)
+    var index: Int = 0
     
     enum Section {
         case main
@@ -56,8 +56,12 @@ class ViewController: UIViewController {
         
             cell.backgroundColor = .brown
             cell.index.text = String(indexPath.item)
-            cell.fetchImage(indexPath.row, itemIdentifier)
-//            cell.fetchImage(indexPath.row, self.images[indexPath.row])
+            
+            if let image = cache[indexPath.row] {
+                cell.image.image = image
+            } else {
+                cell.fetchImage(indexPath.row, itemIdentifier)
+            }
             
             return cell
         }
@@ -72,13 +76,13 @@ class ViewController: UIViewController {
     func loadImages() {
         var newURL: [URL] = [URL]()
         
-        for _ in 0..<20 {
-            let number = range.removeLast()
+        for number in index..<(index+20) {
             let urlString = "https://picsum.photos/id/\(number)/1000/1000"
             let url = URL(string: urlString)!
             
             newURL.append(url)
         }
+        index += 20
         
         images += newURL
         
