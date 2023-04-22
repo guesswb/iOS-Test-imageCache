@@ -10,14 +10,14 @@ import UIKit
 var cache: [Int: UIImage] = [:]
 
 class ImageCell: UICollectionViewCell {
-    var image: UIImageView = UIImageView(image: UIImage(named: "placeholder"))
+    var imageView: UIImageView = UIImageView(image: UIImage(named: "placeholder"))
     var index: UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 20))
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        image.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
-        addSubview(image)
+        imageView.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
+        addSubview(imageView)
         addSubview(index)
     }
     
@@ -29,8 +29,16 @@ class ImageCell: UICollectionViewCell {
         Task {
             let (data, _) = try await URLSession.shared.data(from: url)
             let imageFromData = UIImage(data: data)
-            image.image = imageFromData
-            cache[index] = imageFromData
+            
+            let size = CGSize(width: frame.width, height: frame.height)
+            let renderer = UIGraphicsImageRenderer(size: size)
+            
+            let image = renderer.image { context in
+                imageFromData?.draw(in: CGRect(origin: .zero, size: size))
+            }
+            
+            imageView.image = image
+            cache[index] = image
         }
     }
 }
@@ -58,7 +66,7 @@ class ViewController: UIViewController {
             cell.index.text = String(indexPath.item)
             
             if let image = cache[indexPath.row] {
-                cell.image.image = image
+                cell.imageView.image = image
             } else {
                 cell.fetchImage(indexPath.row, itemIdentifier)
             }
