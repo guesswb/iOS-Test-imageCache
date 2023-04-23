@@ -1,5 +1,13 @@
 # iOS-image
 
+## NSCache
+|NSCache|NSCache + 이미지resize|NSCache + 이미지downsmpling|NSCache + 이미지downsampling + 디스크캐시|
+|---|---|---|---|
+|||||
+|||||
+|||||
+  
+## Dictionary  
 |순정|메모리캐시|메모리캐시 + 이미지resize|메모리캐시 + 이미지downsmpling|메모리캐시 + 이미지downsampling + 디스크캐시|
 |---|---|---|---|---|
 |<img width="150px" src="https://user-images.githubusercontent.com/54696445/233754099-28984efa-d7a9-40a3-8c71-2211700e67b4.gif"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233754177-84f76e1d-9d1a-471f-8d0d-e57f4838206c.gif"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233792714-5d337eb5-4d04-461f-8e06-62d0b0d34255.gif"/>|||
