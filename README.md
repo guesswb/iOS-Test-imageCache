@@ -3,9 +3,9 @@
 ## NSCache
 |NSCache|NSCache + 이미지resize|NSCache + 이미지downsmpling|
 |---|---|---|
-||||
-||||
-||||
+|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899185-9b05d4b2-7da6-4640-b5da-e806288c6266.gif"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899194-4f99125f-68bb-4ffd-b109-7d672d81acd6.gif"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899202-dff490ba-cd2c-4344-8e9f-6b4448c4b383.gif"/>|
+|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899239-ab78eb49-3ccd-4c33-a6f3-47918ea4284b.png"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899242-17ec3d35-fa6e-4363-8590-b34bd7124ead.png"/>|<img width="150px" src="https://user-images.githubusercontent.com/54696445/233899249-63746c9f-8281-4987-9baa-b797a4f57add.png"/>|
+|스크롤 내릴 때 network 요청<br/>스크롤 올릴 때 NSCache<br/>memory 많이 잡아먹음|스크롤 내릴 때 network요청 -> resize<br/>스크롤 올릴 때 NSCache<br/>memory 적게 사용|스크롤 내릴 때 network 요청 -> downsampling<br/>스크롤 올릴 때 NSCache<br/>메모리 적게 사용<br/>decoding에 cpu 적게 사용|
   
 ## Dictionary  
 |순정|메모리캐시|메모리캐시 + 이미지resize|메모리캐시 + 이미지downsmpling|
