@@ -7,7 +7,8 @@
 
 import UIKit
 
-var cache: [Int: UIImage] = [:]
+//var cache: [Int: UIImage] = [:]
+var cache = NSCache<NSString, UIImage>()
 
 class ImageCell: UICollectionViewCell {
     var imageView: UIImageView = UIImageView(image: UIImage(named: "placeholder"))
@@ -25,20 +26,40 @@ class ImageCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func downSample(at data: Data, to pointSize: CGSize, scale: CGFloat) -> UIImage? {
+        let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let imageSource = CGImageSourceCreateWithData(data as CFData, imageSourceOptions) else { return nil }
+//        let imageSource = CGImageSourceCreateWithURL(url as CFURL, imageSourceOptions)!
+        
+        let maxDimensionInPixels = max(pointSize.width, pointSize.height) * scale
+        let downsampleOptions = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimensionInPixels
+        ] as CFDictionary
+        
+        guard let downsampledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampleOptions) else { return nil }
+        return UIImage(cgImage: downsampledImage)
+    }
+    
     func fetchImage(_ index: Int, _ url: URL) {
+        
         Task {
             let (data, _) = try await URLSession.shared.data(from: url)
-            let imageFromData = UIImage(data: data)
+//            guard let imageFromData = UIImage(data: data) else { return }
+//
+//            let size = CGSize(width: frame.width, height: frame.height)
+//            let renderer = UIGraphicsImageRenderer(size: size)
+//
+//            let image = renderer.image { context in
+//                imageFromData.draw(in: CGRect(origin: .zero, size: size))
+//            }
             
-            let size = CGSize(width: frame.width, height: frame.height)
-            let renderer = UIGraphicsImageRenderer(size: size)
-            
-            let image = renderer.image { context in
-                imageFromData?.draw(in: CGRect(origin: .zero, size: size))
-            }
-            
+            guard let image = downSample(at: data, to: CGSize(width: frame.width, height: frame.height), scale: UIScreen.main.scale) else { return }
             imageView.image = image
-            cache[index] = image
+            cache.setObject(image, forKey: url.absoluteString as NSString)
+//            cache[index] = image
         }
     }
 }
@@ -46,7 +67,6 @@ class ImageCell: UICollectionViewCell {
 class ViewController: UIViewController {
     
     var images: [URL] = []
-    var index: Int = 0
     
     enum Section {
         case main
@@ -65,7 +85,7 @@ class ViewController: UIViewController {
             cell.backgroundColor = .brown
             cell.index.text = String(indexPath.item)
             
-            if let image = cache[indexPath.row] {
+            if let image = cache.object(forKey: itemIdentifier.absoluteString as NSString) {
                 cell.imageView.image = image
             } else {
                 cell.fetchImage(indexPath.row, itemIdentifier)
@@ -82,15 +102,16 @@ class ViewController: UIViewController {
     }
     
     func loadImages() {
+        if images.count >= 100 { return }
+        
         var newURL: [URL] = [URL]()
         
-        for number in index..<(index+20) {
+        for number in images.count..<(images.count+20) {
             let urlString = "https://picsum.photos/id/\(number)/1000/1000"
             let url = URL(string: urlString)!
             
             newURL.append(url)
         }
-        index += 20
         
         images += newURL
         
@@ -113,7 +134,7 @@ extension ViewController: UICollectionViewDelegate {
 
 extension ViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.frame.width - 20) / 3
+        let width = (collectionView.frame.width - 20) / 2
         return CGSize(width: width, height: width)
     }
 }
